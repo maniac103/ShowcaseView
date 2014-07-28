@@ -20,12 +20,14 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.os.Build;
 import android.text.DynamicLayout;
 import android.text.Layout;
 import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.TextAppearanceSpan;
+import android.view.View;
 
 /**
  * Draws the text as required by the ShowcaseView
@@ -38,6 +40,7 @@ class TextDrawer {
     private final ShowcaseAreaCalculator calculator;
     private final float padding;
     private final float actionBarOffset;
+    private final View parent;
 
     private CharSequence mTitle, mDetails;
     private float[] mBestTextPosition = new float[3];
@@ -47,12 +50,30 @@ class TextDrawer {
     private TextAppearanceSpan mDetailSpan;
     private boolean hasRecalculated;
 
-    public TextDrawer(Resources resources, ShowcaseAreaCalculator calculator, Context context) {
-        padding = resources.getDimension(R.dimen.text_padding);
-        actionBarOffset = resources.getDimension(R.dimen.action_bar_offset);
+    private static class TextLayout extends DynamicLayout {
+        private int mDirection;
+
+        public TextLayout(CharSequence text, TextPaint paint, float width,
+                float spacingmult, View parent) {
+            super(text, paint, (int) width, Alignment.ALIGN_NORMAL, spacingmult, 1.0f, true);
+            boolean isRtl = Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
+                    && parent.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
+            mDirection = isRtl ? Layout.DIR_RIGHT_TO_LEFT : Layout.DIR_LEFT_TO_RIGHT;
+        }
+        @Override
+        public int getParagraphDirection(int line) {
+            return mDirection;
+        }
+    }
+
+    public TextDrawer(View parent, ShowcaseAreaCalculator calculator) {
+        Resources res = parent.getResources();
+        padding = res.getDimension(R.dimen.text_padding);
+        actionBarOffset = res.getDimension(R.dimen.action_bar_offset);
 
         this.calculator = calculator;
-        this.context = context;
+        this.context = parent.getContext();
+        this.parent = parent;
 
         titlePaint = new TextPaint();
         titlePaint.setAntiAlias(true);
@@ -68,9 +89,8 @@ class TextDrawer {
             if (!TextUtils.isEmpty(mTitle)) {
                 canvas.save();
                 if (hasRecalculated) {
-                    mDynamicTitleLayout = new DynamicLayout(mTitle, titlePaint,
-                            (int) textPosition[2], Layout.Alignment.ALIGN_NORMAL,
-                            1.0f, 1.0f, true);
+                    mDynamicTitleLayout = new TextLayout(mTitle, titlePaint,
+                            textPosition[2], 1.0f, parent);
                 }
                 if (mDynamicTitleLayout != null) {
                     canvas.translate(textPosition[0], textPosition[1]);
@@ -82,10 +102,8 @@ class TextDrawer {
             if (!TextUtils.isEmpty(mDetails)) {
                 canvas.save();
                 if (hasRecalculated) {
-                    mDynamicDetailLayout = new DynamicLayout(mDetails, textPaint,
-                            (int) textPosition[2],
-                            Layout.Alignment.ALIGN_NORMAL,
-                            1.2f, 1.0f, true);
+                    mDynamicDetailLayout = new TextLayout(mDetails, textPaint,
+                            textPosition[2], 1.2f, parent);
                 }
                 float offsetForTitle = mDynamicTitleLayout != null ? mDynamicTitleLayout.getHeight() :
                         0;
