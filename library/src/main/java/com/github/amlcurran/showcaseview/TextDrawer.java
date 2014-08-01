@@ -20,9 +20,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.text.DynamicLayout;
 import android.text.Layout;
 import android.text.SpannableString;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.TextAppearanceSpan;
@@ -41,8 +41,8 @@ class TextDrawer {
 
     private CharSequence mTitle, mDetails;
     private float[] mBestTextPosition = new float[3];
-    private DynamicLayout mDynamicTitleLayout;
-    private DynamicLayout mDynamicDetailLayout;
+    private StaticLayout mTitleLayout;
+    private StaticLayout mDetailLayout;
     private TextAppearanceSpan mTitleSpan;
     private TextAppearanceSpan mDetailSpan;
     private boolean hasRecalculated;
@@ -68,13 +68,13 @@ class TextDrawer {
             if (!TextUtils.isEmpty(mTitle)) {
                 canvas.save();
                 if (hasRecalculated) {
-                    mDynamicTitleLayout = new DynamicLayout(mTitle, titlePaint,
+                    mTitleLayout = new StaticLayout(mTitle, titlePaint,
                             (int) textPosition[2], Layout.Alignment.ALIGN_NORMAL,
                             1.0f, 1.0f, true);
                 }
-                if (mDynamicTitleLayout != null) {
+                if (mTitleLayout != null) {
                     canvas.translate(textPosition[0], textPosition[1]);
-                    mDynamicTitleLayout.draw(canvas);
+                    mTitleLayout.draw(canvas);
                     canvas.restore();
                 }
             }
@@ -82,16 +82,15 @@ class TextDrawer {
             if (!TextUtils.isEmpty(mDetails)) {
                 canvas.save();
                 if (hasRecalculated) {
-                    mDynamicDetailLayout = new DynamicLayout(mDetails, textPaint,
+                    mDetailLayout = new StaticLayout(mDetails, textPaint,
                             (int) textPosition[2],
                             Layout.Alignment.ALIGN_NORMAL,
                             1.2f, 1.0f, true);
                 }
-                float offsetForTitle = mDynamicTitleLayout != null ? mDynamicTitleLayout.getHeight() :
-                        0;
-                if (mDynamicDetailLayout != null) {
+                float offsetForTitle = mTitleLayout != null ? mTitleLayout.getHeight() : 0;
+                if (mDetailLayout != null) {
                     canvas.translate(textPosition[0], textPosition[1] + offsetForTitle);
-                    mDynamicDetailLayout.draw(canvas);
+                    mDetailLayout.draw(canvas);
                     canvas.restore();
                 }
 
