@@ -111,7 +111,7 @@ public class ShowcaseView extends RelativeLayout
         } else {
             showcaseDrawer = new StandardShowcaseDrawer(getResources());
         }
-        textDrawer = new TextDrawer(this, showcaseAreaCalculator);
+        textDrawer = new TextDrawer(getResources(), showcaseAreaCalculator, getContext());
 
         updateStyle(styled, false);
 
