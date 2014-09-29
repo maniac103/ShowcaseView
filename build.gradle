@@ -20,7 +20,7 @@ def isReleaseBuild() {
 
 allprojects {
   group = GROUP
-  version = VERSION_CODE
+  //version = VERSION_CODE
 
   repositories {
     mavenCentral()
